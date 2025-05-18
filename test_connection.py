@@ -5,6 +5,7 @@ from core.config import get_settings
 settings = get_settings()
 
 async def test_connection():
+    # GEREKTİĞİNDE BURADAN KONTROL SAĞLA.
     try:
         client = AsyncIOMotorClient(settings.MONGO_URI)
         db = client[settings.MONGO_DB_NAME]
