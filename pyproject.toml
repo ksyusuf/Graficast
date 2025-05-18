@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "graficast"
-version = "1.0.0"
+version = "1.0.3"
 description = "Graficast API"
 authors = ["Yusuf Akçakaya"]
 readme = "README.md"
