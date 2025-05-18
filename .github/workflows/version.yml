@@ -1,0 +1,60 @@
+# Versiyon Yönetimi
+# Commit mesajlarına göre otomatik versiyon artırma:
+# - BREAKING CHANGE: -> Major (2.0.0)
+# - feat: -> Minor (1.1.0)
+# - fix: -> Patch (1.0.1)
+# PR main'e merge edildiğinde otomatik çalışır
+
+name: Version Management
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+
+# Repository'ye push yapma yetkisi ekle
+permissions:
+  contents: write
+
+jobs:
+  version:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Check commit messages
+        id: check_commits
+        run: |
+          COMMITS=$(git log --format=%B ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }})
+          
+          if echo "$COMMITS" | grep -q "BREAKING CHANGE"; then
+            echo "bump_type=major" >> $GITHUB_OUTPUT
+          elif echo "$COMMITS" | grep -q "feat:"; then
+            echo "bump_type=minor" >> $GITHUB_OUTPUT
+          else
+            echo "bump_type=patch" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Update version
+        run: |
+          python scripts/version.py ${{ steps.check_commits.outputs.bump_type }}
+
+      - name: Create version tag
+        run: |
+          VERSION=$(python -c "from core.version import __version__; print(__version__)")
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add core/version.py
+          git commit -m "chore: Bump version to $VERSION"
+          git tag -a "v$VERSION" -m "Version $VERSION"
+          git push origin main
+          git push origin "v$VERSION" 
