@@ -3,7 +3,7 @@ Versiyon bilgileri.
 SemVer (Semantic Versioning) formatında: MAJOR.MINOR.PATCH
 """
 
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 __build__ = "1"
 __author__ = "Yusuf Akçakaya"
 __description__ = "Graficast API" 
