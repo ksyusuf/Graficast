@@ -34,19 +34,25 @@ def update_version(version_file: str, bump_type: str = "patch"):
 
     new_version = f"{major}.{minor}.{patch}"
 
-    # Dosyayı güncelle
+    # core/version.py dosyasını güncelle
     content = content.replace(f'__version__ = "{current_version}"', f'__version__ = "{new_version}"')
-
     with open(version_file, "w") as f:
         f.write(content)
-
     print(f"Versiyon {current_version} -> {new_version} olarak güncellendi (SemVer)")
 
-    # pyproject.toml içindeki version alanını da güncelle
+    # pyproject.toml içindeki version alanını güncelle
     pyproject_path = Path(__file__).parent.parent / "pyproject.toml"
     with open(pyproject_path, "r", encoding="utf-8") as f:
         pyproject_content = f.read()
-    pyproject_content = re.sub(r'(version\s*=\s*")[^"]+("\n)', f'\1{new_version}\2', pyproject_content)
+    
+    # [tool.poetry] altındaki version alanını güncelle
+    pyproject_content = re.sub(
+        r'(version\s*=\s*")[^"]+(")',
+        f'version = "{new_version}"',
+        pyproject_content,
+        flags=re.MULTILINE
+    )
+    
     with open(pyproject_path, "w", encoding="utf-8") as f:
         f.write(pyproject_content)
     print(f"pyproject.toml version alanı {new_version} olarak güncellendi")
