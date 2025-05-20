@@ -62,6 +62,55 @@
 python -c "import base64; print(base64.b64encode(open('token.pickle', 'rb').read()).decode())"
 ```
 
+### Token Edinme ve Base64 Dönüşümü
+```bash
+# Windows PowerShell'de token.pickle'ı base64'e çevirme
+python -c """
+
+from services.google_photos_service import GooglePhotosService
+import base64
+import pickle
+from io import BytesIO
+import asyncio
+from core.config import get_settings
+import json
+from google_auth_oauthlib.flow import InstalledAppFlow
+
+# Settings'ten credentials'ı al
+settings = get_settings()
+credentials_json = settings.GOOGLE_CREDENTIALS_JSON
+credentials_dict = json.loads(credentials_json)
+
+# GooglePhotosService instance'ı oluştur
+service = GooglePhotosService()
+
+# Async fonksiyonu çalıştır
+async def get_token():
+    # OAuth2 flow'u başlat
+    flow = InstalledAppFlow.from_client_config(
+        credentials_dict,
+        service.SCOPES,  # GooglePhotosService'in kendi scope'larını kullan
+        redirect_uri='http://localhost:8080/'
+    )
+    
+    # Kimlik doğrulama
+    creds = flow.run_local_server(port=8080)
+    
+    # Token'ı direkt bellekte pickle'la
+    pickle_buffer = BytesIO()
+    pickle.dump(creds, pickle_buffer)
+    pickle_data = pickle_buffer.getvalue()
+    
+    # Base64'e çevir
+    base64_data = base64.b64encode(pickle_data).decode('utf-8')
+    
+    print('Base64 encoded token:')
+    print(base64_data)
+
+# Async fonksiyonu çalıştır
+asyncio.run(get_token())"""
+```
+
 ## Güvenlik Önlemleri
 - Hassas bilgiler (token, credentials) environment variable'larda saklanıyor
 - Geçici dosyalar işlem sonunda temizleniyor
