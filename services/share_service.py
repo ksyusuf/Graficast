@@ -17,12 +17,19 @@ class ShareService:
         self.collection = self.db.get_collection("shares")
         self.image_renderer = ImageRenderer()
         self.image_output_dir = "output/images"
+        self.google_photos = None
 
+    async def _get_google_photos(self) -> GooglePhotosService:
+        """Google Photos servisini lazy loading ile başlatır."""
+        if self.google_photos is None:
+            self.google_photos = GooglePhotosService()
+            # Credentials'ı async olarak al
+            await self.google_photos._get_credentials()
+        return self.google_photos
 
     def _get_turkey_time(self) -> datetime:
         """Türkiye saatini döndürür (GMT+3)"""
         return datetime.now(UTC) + timedelta(hours=3)
-
 
     async def get_shares_batch(self, comment_ids: List[int]) -> List[ShareResponse]:
         """Toplu paylaşım bilgilerini getirir. Olmayan comment_id'ler için yeni kayıt oluşturur.
@@ -104,11 +111,11 @@ class ShareService:
             
             # Google Photos'a yükle
             print("📤 Google Photos'a yükleniyor...")
-            google_photos_service = GooglePhotosService()
-            media_item = await google_photos_service.upload_image(image,
-                                                                     api_share_data.comment_id,
-                                                                     template_type,
-                                                                     existing_share.get("google_photos_id") if existing_share else None)
+            google_photos = await self._get_google_photos()
+            media_item = await google_photos.upload_image(image,
+                                                             api_share_data.comment_id,
+                                                             template_type,
+                                                             existing_share.get("google_photos_id") if existing_share else None)
 
             # aynı resim yüklenmişse hiçbir şey yapmayacağız.
             if media_item['id'] == existing_share.get("google_photos_id") if existing_share else None:
@@ -258,7 +265,7 @@ class ShareService:
                 print(f"📝 Yeni açıklama: {new_description}")
                 
                 # Google Photos açıklamasını güncelle
-                google_photos = GooglePhotosService()
+                google_photos = await self._get_google_photos()
                 await google_photos.update_media_item_description(share["google_photos_id"], new_description)
                 print("✅ Google Photos açıklaması başarıyla güncellendi")
                 
