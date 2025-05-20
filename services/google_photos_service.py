@@ -10,6 +10,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 from core.config import get_settings
+from core.token_service import TokenService
 
 """ NOTLAR
 1. Token Yönetimi:
@@ -57,23 +58,25 @@ class GooglePhotosService:
     def __init__(self, token_path='token.pickle'):
         self.settings = get_settings()
         self.token_path = token_path
-        self.credentials = self._get_credentials()
+        self.token_service = TokenService()
+        self.credentials = None
         self.service = None
         self.album_id = None
         print("✅ GooglePhotosService başlatıldı")
 
-    def _get_credentials(self) -> Credentials:
+    async def _get_credentials(self) -> Credentials:
         try:
             print("🔐 Kimlik bilgileri alınıyor...")
             credentials = None
 
-            # Settings'ten token path'i al
-            token_path = self.settings.token_path
-
-            if os.path.exists(token_path):
-                with open(token_path, 'rb') as token:
-                    credentials = pickle.load(token)
-                    print("📦 Mevcut token yüklendi")
+            # Veritabanından token'ı al
+            token_data = await self.token_service.get_token_from_db()
+            
+            if token_data:
+                credentials = pickle.loads(token_data)
+                print("📦 Veritabanından token yüklendi")
+            else:
+                print("❌ Veritabanında token bulunamadı")
 
             if not credentials or not credentials.valid:
                 if credentials and credentials.expired and credentials.refresh_token:
@@ -101,20 +104,24 @@ class GooglePhotosService:
                         if os.path.exists(temp_credentials_path):
                             os.remove(temp_credentials_path)
 
-                # Token'ı kaydet
-                with open(token_path, 'wb') as token:
-                    pickle.dump(credentials, token)
-                    print("✅ Yeni token kaydedildi")
+                # Token'ı veritabanına kaydet
+                token_bytes = pickle.dumps(credentials)
+                await self.token_service.save_token_to_db(token_bytes)
+                print("✅ Yeni token veritabanına kaydedildi")
 
+            self.credentials = credentials  # Credentials'ı sınıf değişkenine ata
             return credentials
         except Exception as e:
             raise GooglePhotosError(f"Kimlik doğrulama hatası: {e}", 400)
 
-
-    def _get_service(self):
+    async def _get_service(self):
         if not self.service:
             print("🛠️ Google Photos servisi oluşturuluyor...")
             try:
+                # Credentials'ı al
+                if not self.credentials:
+                    self.credentials = await self._get_credentials()
+
                 # Token süresi kontrolü
                 if self.credentials.expired:
                     print("❌ Token süresi dolmuş.")
@@ -141,7 +148,7 @@ class GooglePhotosService:
             return self.album_id
 
         try:
-            service = self._get_service()
+            service = await self._get_service()
             print("🔍 Albümler kontrol ediliyor...")
             
             # Önce albümleri listele
@@ -376,7 +383,7 @@ class GooglePhotosService:
         """Google Photos'tan belirli bir medya öğesinin bilgilerini getirir."""
         try:
             print(f"🔍 Medya öğesi getiriliyor: {media_item_id}")
-            service = self._get_service()
+            service = await self._get_service()
 
             response = service.mediaItems().get(mediaItemId=media_item_id).execute()
             print(f"✅ Medya öğesi başarıyla getirildi.")
@@ -392,7 +399,7 @@ class GooglePhotosService:
         """Google Photos'taki bir medya öğesinin açıklamasını günceller."""
         try:
             print(f"📝 Medya öğesi açıklaması güncelleniyor...")
-            service = self._get_service()
+            service = await self._get_service()
             
             # Güncellemeyi kaydet
             response = service.mediaItems().patch(

@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, UTC
 
 
 # api üzerinden gelecek verilerin modeli
@@ -41,4 +41,12 @@ class DatabaseTemplate(BaseModel):
     size: str
     description: Optional[str] = None
     template_path: str
+
+
+class Token(BaseModel):
+    """Token modeli."""
+    id: Optional[str] = Field(None, alias="_id")
+    token_data: str  # Base64 encoded token data
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
