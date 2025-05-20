@@ -65,10 +65,12 @@ async def image_create(
         )
         
         # Görsel oluştur ve paylaşım bilgilerini güncelle
+        # gelen share: DatabaseShare'dir.
         share = await share_service.create_image(api_share_data)
 
         return ApiResponse.success_response(
-            data=ShareResponse(data=share)
+            # DatabaseShare'i ShareResponse'a dönüştür
+            data=ShareResponse(**share.model_dump())
         )
 
     except GooglePhotosError as e:

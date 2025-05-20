@@ -41,7 +41,7 @@ class ShareService:
         existing_shares = await cursor.to_list(length=None)
         
         # Mevcut paylaşımları ShareResponse listesine dönüştür
-        shares = [ShareResponse(data=DatabaseShare(**share)) for share in existing_shares]
+        shares = [ShareResponse(**share) for share in existing_shares]
         
         # Olmayan comment_id'ler için yeni kayıtlar oluştur
         existing_comment_ids = {share["comment_id"] for share in existing_shares}
@@ -65,7 +65,7 @@ class ShareService:
                     tags=[]
                 )
                 result = await self.collection.insert_one(new_share.model_dump())
-                shares.append(ShareResponse(data=new_share))
+                shares.append(ShareResponse(**new_share.model_dump()))
 
         return shares
     

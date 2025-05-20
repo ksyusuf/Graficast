@@ -38,7 +38,7 @@ class BatchCommentRequest(BaseModel):
             }
         }
 
-class ShareResponse(BaseModel):
+class ShareResponse(DatabaseShare):
     """Paylaşım yanıt modeli.
     ** API Response Wrapper Kullanımı:
     ShareResponse gibi wrapper modeller kullanmak,
@@ -57,7 +57,7 @@ class ShareResponse(BaseModel):
     Bu, API'nin tutarlılığını ve öngörülebilirliğini artırır
     Hata durumları ve başarılı yanıtlar için standart bir format sağlar
     """
-    data: DatabaseShare
+    pass
 
 class BatchShareResponse(BaseModel):
     """Toplu paylaşım yanıt modeli."""
