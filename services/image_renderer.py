@@ -158,26 +158,82 @@ class ImageRenderer:
         
         return image
 
-    def _draw_headers(self, draw: ImageDraw.Draw, api_share_data, header_font: ImageFont.FreeTypeFont, 
-                     text_color: tuple, content_padding_x: int, current_y: int) -> int:
-        """Başlıkları çizer ve son y pozisyonunu döndürür"""
-        # Üniversite
-        title = api_share_data.uni_name
-        draw.text((content_padding_x, current_y), title, font=header_font, fill=text_color)
-        current_y += header_font.getbbox(title)[3] + 15
+    def _draw_headers(self, draw: ImageDraw.Draw, api_share_data, 
+                     text_color: tuple, content_padding_x: int, current_y: int, content_width: int) -> int:
+        header_font = ImageFont.truetype(self.text_font_path, 40)
+        
+        """Başlıkları çizer ve son y pozisyonunu döndürür
+            en son hangi alan varsa onu 700 kalınlığında çizer
+            öncesini 500 kalınlığında çizer."""
+        if api_share_data.ins_name:
+            # ins_name varsa, dep_name ve uni_name'i birleştir
+            combined = ""
+            if api_share_data.dep_name and api_share_data.uni_name:
+                combined = f"{api_share_data.uni_name} / {api_share_data.dep_name}"
+            elif api_share_data.uni_name:
+                combined = api_share_data.uni_name
+            elif api_share_data.dep_name:
+                combined = api_share_data.dep_name
 
-        # Bölüm ve Eğitmen
-        if api_share_data.dep_name:
-            draw.text((content_padding_x, current_y), api_share_data.dep_name, font=header_font, fill=text_color)
-            current_y += header_font.getbbox(api_share_data.dep_name)[3] + 15
-            
-            if api_share_data.ins_name:
-                draw.text((content_padding_x, current_y), api_share_data.ins_name, font=header_font, fill=text_color)
-                current_y += header_font.getbbox(api_share_data.ins_name)[3] + 40
-            else:
-                current_y += 30
+            if combined:
+                # uni_name ve dep_name kendi içinde wrapping ile çiz
+                header_font.set_variation_by_axes([500])
+                wrapped_lines = textwrap.wrap(combined, width=int(content_width / 20))
+                for i, line in enumerate(wrapped_lines):
+                    draw.text((content_padding_x, current_y), line, font=header_font, fill=text_color)
+                    line_height = header_font.getbbox(line)[3]
+                    if i < len(wrapped_lines) - 1:
+                        current_y += line_height + 5
+                    else:
+                        current_y += line_height + 15
+
+            # ins_name'i çiz
+            header_font.set_variation_by_axes([700])
+            wrapped_lines = textwrap.wrap(api_share_data.ins_name, width=int(content_width / 20))
+            for i, line in enumerate(wrapped_lines):
+                draw.text((content_padding_x, current_y), line, font=header_font, fill=text_color)
+                line_height = header_font.getbbox(line)[3]
+                if i < len(wrapped_lines) - 1:
+                    current_y += line_height + 5
+                else:
+                    current_y += line_height + 40
+
+        elif api_share_data.dep_name:
+            # dep_name varsa, uni_name'i kendi içinde wrapping ile çiz, dep_name alt satırda
+            if api_share_data.uni_name:
+                header_font.set_variation_by_axes([500])
+                wrapped_lines = textwrap.wrap(api_share_data.uni_name, width=int(content_width / 20))
+                for i, line in enumerate(wrapped_lines):
+                    draw.text((content_padding_x, current_y), line, font=header_font, fill=text_color)
+                    line_height = header_font.getbbox(line)[3]
+                    if i < len(wrapped_lines) - 1:
+                        current_y += line_height + 5
+                    else:
+                        current_y += line_height + 15
+
+            # dep_name'i çiz
+            header_font.set_variation_by_axes([700])
+            wrapped_lines = textwrap.wrap(api_share_data.dep_name, width=int(content_width / 20))
+            for i, line in enumerate(wrapped_lines):
+                draw.text((content_padding_x, current_y), line, font=header_font, fill=text_color)
+                line_height = header_font.getbbox(line)[3]
+                if i < len(wrapped_lines) - 1:
+                    current_y += line_height + 5
+                else:
+                    current_y += line_height + 40
+
         else:
-            current_y += 30
+            # sadece uni_name varsa, kendi içinde wrapping
+            header_font.set_variation_by_axes([700])
+            if api_share_data.uni_name:
+                wrapped_lines = textwrap.wrap(api_share_data.uni_name, width=int(content_width / 20))
+                for i, line in enumerate(wrapped_lines):
+                    draw.text((content_padding_x, current_y), line, font=header_font, fill=text_color)
+                    line_height = header_font.getbbox(line)[3]
+                    if i < len(wrapped_lines) - 1:
+                        current_y += line_height + 5
+                    else:
+                        current_y += line_height + 40
 
         return current_y
 
@@ -257,8 +313,6 @@ class ImageRenderer:
         draw = ImageDraw.Draw(image)
 
         # Fontları yükle
-        header_font = ImageFont.truetype(self.text_font_path, 40)
-        header_font.set_variation_by_axes([700])
         text_font = ImageFont.truetype(self.text_font_path, 40)
         footer_font = ImageFont.truetype(self.text_font_path, 38)
 
@@ -269,7 +323,7 @@ class ImageRenderer:
         content_width = frame_rect[2] - frame_rect[0] - 100
 
         # Başlıkları çiz
-        current_y = self._draw_headers(draw, api_share_data, header_font, text_color, content_padding_x, current_y)
+        current_y = self._draw_headers(draw, api_share_data, text_color, content_padding_x, current_y, content_width)
 
         # Ayırıcı çizgi
         divider_height = 2
