@@ -55,6 +55,8 @@
 1. Environment Variables bölümüne eklenmesi gereken değişkenler:
    - `TOKEN_BASE64`: `token.pickle` dosyasının base64 formatındaki hali
    - `GOOGLE_CREDENTIALS_JSON`: `credentials.json` içeriği
+   - Bir süre sonra render.com'un ip adresleri değişiyor, yeni ip adreslerini render.com üzerinden 
+   alıp MongoDB 'IP Access List' içerisine eklemelisin. Şu anda 2 ip eklenmiş durumda.
 
 ### Base64 Dönüşümü
 ```bash
@@ -82,13 +84,3 @@ python get_token_manual.py
 - Lokal geliştirme ortamında `token.pickle` ve `credentials.json` dosyaları kullanılabilir
 - Settings sınıfı her iki durumu da destekliyor
 - Token yenileme işlemi otomatik yapılıyor
-
-## Performans İyileştirmeleri
-- Aynı bilgilerle resim üretilirse, mevcut media_item_id kullanılıyor
-- Gereksiz yüklemeler önleniyor
-- Albüm sıralaması yeni-eski şeklinde yapılıyor
-
-## Hata Yönetimi
-- Google Photos API hataları özel exception sınıfı ile yönetiliyor
-- Token ve credentials hataları detaylı loglanıyor
-- Kullanıcı dostu hata mesajları döndürülüyor 
