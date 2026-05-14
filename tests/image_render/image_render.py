@@ -6,11 +6,11 @@ import os
 # Mock data for testing
 mock_comment = ApiShare(
     comment_id=123,
-    comment="""Pamuk şekeri gibi bir hoca. Öğretmez ama öğrenirsiniz, kırıcı konuşma, her yiğidin bir yoğurt yiyişi var dedikleri gibi Süleyman hoca da diğer hocalardan farklı şekilde yoğurt yiyor""",
+    comment="""Pamuk şekeri gibi bir hosdsdca. sasdasdasd sfdsf sadasd  asdasd asdasda saddasd sadasd asdasdas sadsad fdsfaf asd  asfasdasd asdasdasd fghjtjds adsasdasd sadad Öğretmez ama öğrenirsiniz, kırıcı konuşma, her yiğidin bir yoğurt yiyişi var dedikleri gibi Süleyman hoca da diğer hocalardan farklı şekilde yoğurt yiyor""",
     comment_date=datetime.now(),
     writer_name="Anonim",
-    uni_name="SAKARYA UYGULAMALI BİLİMLER ÜNİVERSİTESİ",
-    dep_name="MATEMATİK VE FEN BİLİMLERİ EĞİTİMİ BÖLÜMÜ",
+    uni_name="TÜRKİYE ULUSLARARASI İSLAM, BİLİM VE TEKNOLOJİ ÜNİVERSİTESİ",
+    dep_name="ULUSLARARASI SOYKIRIM VE İNSANLIĞA KARŞI İŞLENEN SUÇLAR ENSTİTÜSÜ",
     ins_name="SÜLEYMAN A.",
     image_template_type="instagram-post-square"
 )
